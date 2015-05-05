@@ -1,0 +1,90 @@
+﻿@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>Index</title>
+    <style>
+        .lists {
+            width: 80%;
+            float:left;
+        }
+        .form {
+            width:20%;
+            display:inline-block;
+        }
+    </style>
+</head>
+<body>
+    <div class="lists" style="background-color:blue" data-bind="foreach: contactsArray">
+        <div style="width:30%;background-color:red;float:left" data-bind="click: $root.remove">
+            <strong data-bind="text: ContactAddress"></strong>
+            <strong data-bind="text: ContactName"></strong>
+        </div>     
+    </div>
+
+    <div class="form">
+        @Html.Partial("AddContact")
+    </div>
+   
+
+
+
+    @Scripts.Render("~/bundles/jquery")
+    @Scripts.Render("~/bundles/ko")
+    <script src="~/Scripts/jquery.validate.min.js"></script>
+    <script>
+        $(function () {
+
+            var Contacts = function (ContactId, ContactName, ContactAddress) {
+                var self = this;
+                self.ContactId = ContactId;
+                self.ContactName = ContactName;
+                self.ContactAddress = ContactAddress;
+            }
+
+            var view = {               
+                contactsArray: ko.observableArray(),
+                send: function(form) {
+                    if ($(form).valid()) {
+                        $.post("/api/access", $(form).serialize())
+                            .done(function (data) {
+                                view.contactsArray.push(data);
+                            });
+                    }                    
+                },
+
+                getAll: function(){
+                    $.get("/api/access/", function (data) {
+                        view.contactsArray(data)
+                        console.log(data);
+                    });
+                },
+
+                remove: function (data) {
+                    console.log(data);
+                    var result = confirm("Are you sure you want delete");
+                    if (result) {
+                        $.ajax({
+                            type: "DELETE",
+                            url: "api/access/" + data.ContactId,
+                        }).done(function (dataSuccess) {
+                            view.contactsArray.remove(data);
+                        });
+                    }
+                }
+
+            }
+
+
+
+            view.getAll();
+            ko.applyBindings(view);
+        });
+    </script>
+</body>
+</html>
